@@ -353,7 +353,7 @@ function full_batch_em_step(bpc::CuBitsProbCircuit, data::CuArray;
                             batch_size, pseudocount, report_ll=true,
                             marginals, flows, node_aggr, edge_aggr,
                             mine, maxe, debug, node_group_aggr, edge_group_aggr, 
-                            node2group, edge2group)
+                            node2group, edge2group, inertia)
 
     num_examples = size(data)[1]
     num_batches = cld(num_examples, batch_size)
@@ -391,9 +391,9 @@ function full_batch_em_step(bpc::CuBitsProbCircuit, data::CuArray;
     end
     aggr_node_flows(node_aggr, bpc, edge_aggr; debug)
 
-    update_params(bpc, node_aggr, edge_aggr; inertia = 0)
+    update_params(bpc, node_aggr, edge_aggr; inertia = inertia)
 
-    update_input_node_params(bpc; pseudocount, inertia = 0, debug)
+    update_input_node_params(bpc; pseudocount, inertia = inertia, debug)
 
     return report_ll ? sum(log_likelihoods) / num_examples : 0.0
 end
@@ -408,7 +408,7 @@ function full_batch_em(bpc::CuBitsProbCircuit, raw_data::CuArray, num_epochs;
                        mars_mem = nothing, flows_mem = nothing, node_aggr_mem = nothing,
                        edge_aggr_mem = nothing, mine=2, maxe=32, debug = false, verbose = true,
                        callbacks = [],
-                       node2group = nothing, edge2group = nothing)
+                       node2group = nothing, edge2group = nothing, inertia = 0.0)
 
     insert!(callbacks, 1, FullBatchLog(verbose))
     callbacks = CALLBACKList(callbacks)
@@ -442,7 +442,7 @@ function full_batch_em(bpc::CuBitsProbCircuit, raw_data::CuArray, num_epochs;
             marginals, flows, node_aggr, edge_aggr,
             mine, maxe, debug, 
             node_group_aggr, edge_group_aggr, 
-            node2group, edge2group)
+            node2group, edge2group, inertia)
         push!(log_likelihoods, log_likelihood)
         done = call(callbacks, epoch, log_likelihood)
         if !isnothing(done) && done[end] == true
