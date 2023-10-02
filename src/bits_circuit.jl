@@ -501,7 +501,7 @@ function BitsProbCircuit(pc::ProbCircuit, input2group; eager_materialize=true, c
     end
 
     f_input(node) = begin
-        if isempty(input2group) or node.dist isa Indicator
+        if isempty(input2group) or dist(node) isa Indicator
             node_id = add_node(node, bits(node, heap), 0)
         else
             group_idx = input2group[node]
